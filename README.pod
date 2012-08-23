@@ -39,7 +39,10 @@ remote ident server.  The default is 2.
 
 =head1 HELPERS
 
-=head2 ident
+=head2 ident [ $tx, [ $timeout ] ]
+
+Optionally takes a transaction and timeout arguments.  If not specified
+the current transaction and the configured default will be used.
 
 Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which
 has two fields, username and os.
@@ -59,7 +62,7 @@ the same if the remote connection came over the loopback address
 (127.0.0.1) and the username matches either the server's username or 
 real uid.
 
- under sub { eval { shift->ident->same_user } };
+ under sub { shift->ident_same_user };
  get '/private' => 'private_route';
 
 Throws an exception if
@@ -73,6 +76,19 @@ Throws an exception if
 =item * the remote ident server returns an error
 
 =back
+
+=head2 ident_same_user [ $tx, [ $timeout ] ]
+
+Optionally takes a transaction and timeout arguments.  If not specified
+the current transaction and the configured default will be used.
+
+Returns true if the user on the server and the remote are the same.  The
+user is considered the same if the remote connection came over the loopback
+address (127.0.0.1) and the username matches either the server's username
+or real uid.
+
+Returns false if the user is not the same or on any kind of error.  Does
+not throw an exception in the case of connection or ident error.
 
 =head1 AUTHOR
 

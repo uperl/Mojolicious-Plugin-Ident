@@ -45,7 +45,10 @@ remote ident server.  The default is 2.
 
 =head1 HELPERS
 
-=head2 ident
+=head2 ident [ $tx, [ $timeout ] ]
+
+Optionally takes a transaction and timeout arguments.  If not specified
+the current transaction and the configured default will be used.
 
 Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which
 has two fields, username and os.
@@ -65,7 +68,7 @@ the same if the remote connection came over the loopback address
 (127.0.0.1) and the username matches either the server's username or 
 real uid.
 
- under sub { eval { shift->ident->same_user } };
+ under sub { shift->ident_same_user };
  get '/private' => 'private_route';
 
 Throws an exception if
@@ -80,18 +83,29 @@ Throws an exception if
 
 =back
 
-=cut
+=head2 ident_same_user [ $tx, [ $timeout ] ]
 
-# FIXME cache results of ident_same_user in cookies (optionally).
-# FIXME make timeout configurable.
-# FIXME test exceptions
+Optionally takes a transaction and timeout arguments.  If not specified
+the current transaction and the configured default will be used.
+
+Returns true if the user on the server and the remote are the same.  The
+user is considered the same if the remote connection came over the loopback
+address (127.0.0.1) and the username matches either the server's username
+or real uid.
+
+Returns false if the user is not the same or on any kind of error.  Does
+not throw an exception in the case of connection or ident error.
+
+=cut
 
 sub register
 {
   my($self, $app, $conf) = @_;
 
+  Mojolicious::Plugin::Ident::Response->_setup;
+
   my $default_timeout = $conf->{timeout} // 2;
-  
+
   $app->helper(ident => sub {
     my($controller, $tx, $timeout) = @_;
     $tx //= $controller->tx;
@@ -115,8 +129,16 @@ sub register
       remote_address => $tx->remote_address,
     );
   });
-
-  Mojolicious::Plugin::Ident::Response->_setup;
+  
+  $app->helper(ident_same_user => sub {
+    my $controller = shift;
+    $controller->session('ident_same_user') // do {
+      my $same_user = eval { $controller->ident(@_)->same_user };
+      return if $@;
+      $controller->session('ident_same_user' => $same_user);
+      $same_user;
+    };
+  });
 }
 
 1;
