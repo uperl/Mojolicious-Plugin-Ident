@@ -49,6 +49,7 @@ __DATA__
 @@ 403.html.ep
 % layout 'default';
 % title 'Forbidden';
+<h1>403 Forbidden</h1>
 <p>You do not have permission to access this resource</p>
 
 @@ layouts/default.html.ep
