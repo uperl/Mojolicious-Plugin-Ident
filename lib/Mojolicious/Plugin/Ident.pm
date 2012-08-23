@@ -38,7 +38,7 @@ server running on the remote server.
 
 =head1 HELPERS
 
-=head2 $controller-E<gt>ident
+=head2 ident
 
 Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which
 has two fields, username and os.
