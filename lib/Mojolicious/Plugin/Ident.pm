@@ -1,11 +1,13 @@
 package Mojolicious::Plugin::Ident;
 
+use strict;
+use warnings;
+use v5.10;
 use Mojo::Base 'Mojolicious::Plugin';
 use Net::Ident;
 use Socket qw( pack_sockaddr_in inet_aton );
 use Mojo::Exception;
-use v5.10;
-use Carp qw( croak );
+use Mojolicious::Plugin::Ident::Response;
 
 # ABSTRACT: Mojo plugin to interact with an ident server
 # VERSION
@@ -23,7 +25,7 @@ use Carp qw( croak );
  
  # only allow access to the user on localhost which 
  # started the mojolicious lite app
- under sub { shift->ident_same_user };
+ under sub { eval { shift->ident->same_user } };
  
  get '/private' => sub {
    shift->render_text("secret place");
@@ -50,6 +52,15 @@ has two fields, username and os.
    );
  };
 
+It also has a same_user method which can be use to determine if the
+user on the server and the remote are the same.  The user is considered
+the same if the remote connection came over the loopback address
+(127.0.0.1) and the username matches either the server's username or 
+real uid.
+
+ under sub { eval { shift->ident->same_user } };
+ get '/private' => 'private_route';
+
 Throws an exception if
 
 =over 4
@@ -62,16 +73,12 @@ Throws an exception if
 
 =back
 
-=head2 $controller-E<gt>ident_same_user
-
-Returns true if and only if the remote user is the same as the user
-who started the mojolicious server.  Only returns true if the user
-connects using the loopback address (127.0.0.1).
-
-Does not thow an exception if a connection or ident error is detected.
-In this case it will note an error in the log and return false.
-
 =cut
+
+# FIXME add logging to both helpers.
+# FIXME cache results of ident_same_user
+# in cookies (optionally).
+# FIXME make timeout configurable.
 
 sub register
 {
@@ -92,51 +99,14 @@ sub register
       die Mojo::Exception->new("ident error: $error");
     }
 
-    return bless { os => $os, username => $username }, 'Mojolicious::Plugin::Ident::Response';
+    Mojolicious::Plugin::Ident::Response->new( 
+      os             => $os,
+      username       => $username,
+      remote_address => $tx->remote_address,
+    );
   });
 
-  my $server_user_uid;
-  my $server_user_name;
-  if($^O eq 'MSWin32')
-  {
-    $server_user_name = $ENV{USERNAME};
-  }
-  else
-  {
-    $server_user_uid  = $<;
-    $server_user_name = scalar getpwuid($<);
-  }
-  
-  croak "could not determine server username"
-    unless $server_user_name;
-  
-  # FIXME should not throw an exception
-  # on error, just return 0 (unlike ident)
-  # FIXME add logging to both helpers.
-  # FIXME cache results of ident_same_user
-  # in cookies (optionally).
-  # FIXME make timeout configurable.
-  $app->helper(ident_same_user => sub {
-    my $controller = shift;
-    return unless $controller->tx->remote_address eq '127.0.0.1';
-    my $ident = $controller->ident(@_);
-    if($ident->username =~ /^\d+$/ && defined $server_user_uid)
-    {
-      return $ident->username == $server_user_uid;
-    }
-    else
-    {
-      return $ident->username eq $server_user_name;
-    }
-  });
+  Mojolicious::Plugin::Ident::Response->_setup;
 }
-
-package
-  Mojolicious::Plugin::Ident::Response;
-
-use Mojo::Base -base;
-
-has 'os';
-has 'username';
 
 1;

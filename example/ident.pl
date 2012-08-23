@@ -12,7 +12,7 @@ get '/' => 'index';
 under sub {
   my($self) = @_;
 
-  return 1 if $self->ident_same_user;
+  return 1 if eval { $self->ident->same_user };
 
   $self->render(status => 403, template => 403);
   return;
