@@ -28,16 +28,20 @@ __DATA__
 % title 'ident test';
 <table>
   <tr>
-    <td>username:</td><td><%= ident->username %></td>
+    <td>username:</td>
+    <td><%= ident->username %></td>
   </tr>
   </tr>
-    <td>os</td><td><%= ident->os %></td>
+    <td>os</td>
+    <td><%= ident->os %></td>
   </tr>
   <tr>
-    <td>local</td><td><%= c->tx->local_address %>:<%= c->tx->local_port %></td>
+    <td>local</td>
+    <td><%= c->tx->local_address %>:<%= c->tx->local_port %></td>
   </tr>
   <tr>
-    <td>remote</td><td><%= c->tx->remote_address %>:<%= c->tx->remote_port %></td>
+    <td>remote</td>
+    <td><%= c->tx->remote_address %>:<%= c->tx->remote_port %></td>
   </tr>
 </table>
 
