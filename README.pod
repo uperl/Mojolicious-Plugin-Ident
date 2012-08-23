@@ -1,6 +1,6 @@
 =head1 NAME
 
-Mojolicious::Plugin::Ident - Mojo plugin to interact with an ident server
+Mojolicious::Plugin::Ident - Mojolicious plugin to interact with an ident server
 
 =head1 VERSION
 
@@ -89,6 +89,9 @@ or real uid.
 
 Returns false if the user is not the same or on any kind of error.  Does
 not throw an exception in the case of connection or ident error.
+
+The result is cached in the session so the ident server only needs to be
+contacted on the first connection.
 
 =head1 AUTHOR
 

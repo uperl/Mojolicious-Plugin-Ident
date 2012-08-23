@@ -31,3 +31,8 @@ Plicease
 stdout
 stdin
 subref
+loopback
+username
+os
+Ollis
+Mojolicious

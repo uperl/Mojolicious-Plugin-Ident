@@ -9,7 +9,7 @@ use Socket qw( pack_sockaddr_in inet_aton );
 use Mojo::Exception;
 use Mojolicious::Plugin::Ident::Response;
 
-# ABSTRACT: Mojo plugin to interact with an ident server
+# ABSTRACT: Mojolicious plugin to interact with an ident server
 # VERSION
 
 =head1 SYNOPSIS
@@ -95,6 +95,9 @@ or real uid.
 
 Returns false if the user is not the same or on any kind of error.  Does
 not throw an exception in the case of connection or ident error.
+
+The result is cached in the session so the ident server only needs to be
+contacted on the first connection.
 
 =cut
 

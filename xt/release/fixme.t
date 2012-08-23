@@ -13,6 +13,7 @@ chdir(File::Spec->catdir($FindBin::Bin, File::Spec->updir, File::Spec->updir));
 
 run_tests(
   match => qr/FIXME/,
-  where => [ grep { -e $_ } qw( bin lib t Makefile.PL )],
+  # TODO: update Test::Fixme to take filenames
+  where => [ grep { -e $_ } qw( bin lib t )],
 );
 
