@@ -6,6 +6,67 @@ Mojolicious::Plugin::Ident - Mojo plugin to interact with an ident server
 
 version 0.1
 
+=head1 SYNOPSIS
+
+ use Mojolicious::Lite;
+ plugin 'ident';
+ 
+ # get the username of the remote using ident protocol
+ get '/' => sub {
+   my $self = shift;
+   $self->render_text("hello " . $self->ident->username);
+ };
+ 
+ # only allow access to the user on localhost which 
+ # started the mojolicious lite app
+ under sub { shift->ident_same_user };
+ 
+ get '/private' => sub {
+   shift->render_text("secret place");
+ };
+
+=head1 DESCRIPTION
+
+This is a plugin to easily interact with ident authentication
+server running on the remote server.
+
+=head1 HELPERS
+
+=head2 $controller-E<gt>ident
+
+Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which
+has two fields, username and os.
+
+ get '/' => sub {
+   my $self = shift;
+   my $ident = $self->ident;
+   $self->render_text(
+     "username: " . $ident->username .
+     "os:       " . $ident->os
+   );
+ };
+
+Throws an exception if
+
+=over 4
+
+=item * it cannot connect to the remote's ident server
+
+=item * the connection to the remote's ident server times out
+
+=item * the remote ident server returns an error
+
+=back
+
+=head2 $controller-E<gt>ident_same_user
+
+Returns true if and only if the remote user is the same as the user
+who started the mojolicious server.  Only returns true if the user
+connects using the loopback address (127.0.0.1).
+
+Does not thow an exception if a connection or ident error is detected.
+In this case it will note an error in the log and return false.
+
 =head1 AUTHOR
 
 Graham Ollis <plicease@cpan.org>
