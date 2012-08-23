@@ -30,9 +30,16 @@ version 0.1
 This is a plugin to easily interact with ident authentication
 server running on the remote server.
 
+=head1 OPTIONS
+
+=head2 timeout
+
+Number of seconds to wait before timing out in the connection with the
+remote ident server.  The default is 2.
+
 =head1 HELPERS
 
-=head2 $controller-E<gt>ident
+=head2 ident
 
 Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which
 has two fields, username and os.

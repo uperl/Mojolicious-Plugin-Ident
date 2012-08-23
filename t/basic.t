@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 10;
 use Test::Mojo;
 
 my @test_ident_data = ( 'foo', 'AwesomeOS', '' );
@@ -26,6 +26,7 @@ eval q{
     like $remote_port, qr{^\d+$}, "remote_port = $remote_port";
     is $local_address, '127.0.0.1', 'local_address = 127.0.0.1';
     is $remote_address, '127.0.0.1', 'remote_address = 127.0.0.1';
+    is $timeout, 2, 'timeout = 2';
     
     bless {}, 'Net::Ident';
   }

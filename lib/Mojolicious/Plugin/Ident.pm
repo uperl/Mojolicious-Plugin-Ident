@@ -36,6 +36,13 @@ use Mojolicious::Plugin::Ident::Response;
 This is a plugin to easily interact with ident authentication
 server running on the remote server.
 
+=head1 OPTIONS
+
+=head2 timeout
+
+Number of seconds to wait before timing out in the connection with the
+remote ident server.  The default is 2.
+
 =head1 HELPERS
 
 =head2 ident
@@ -75,28 +82,31 @@ Throws an exception if
 
 =cut
 
-# FIXME add logging to both helpers.
-# FIXME cache results of ident_same_user
-# in cookies (optionally).
+# FIXME cache results of ident_same_user in cookies (optionally).
 # FIXME make timeout configurable.
+# FIXME test exceptions
 
 sub register
 {
   my($self, $app, $conf) = @_;
 
+  my $default_timeout = $conf->{timeout} // 2;
+  
   $app->helper(ident => sub {
     my($controller, $tx, $timeout) = @_;
     $tx //= $controller->tx;
     my $ident = Net::Ident->newFromInAddr(
       pack_sockaddr_in($tx->local_port, inet_aton($tx->local_address)),
       pack_sockaddr_in($tx->remote_port, inet_aton($tx->remote_address)),
-      $timeout // 2,
+      $timeout // $default_timeout,
     );
     my($username, $os, $error) = $ident->username;
 
     if($error)
     {
-      die Mojo::Exception->new("ident error: $error");
+      my $error = "ident error: $error";
+      $app->log->error($error);
+      die Mojo::Exception->new($error);
     }
 
     Mojolicious::Plugin::Ident::Response->new( 
