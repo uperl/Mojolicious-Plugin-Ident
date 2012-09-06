@@ -9,7 +9,7 @@ use Socket qw( pack_sockaddr_in inet_aton );
 use Mojo::Exception;
 use Mojolicious::Plugin::Ident::Response;
 
-# ABSTRACT: Mojolicious plugin to interact with an ident server
+# ABSTRACT: Mojolicious plugin to interact with a remote ident service
 # VERSION
 
 =head1 SYNOPSIS
@@ -33,25 +33,27 @@ use Mojolicious::Plugin::Ident::Response;
 
 =head1 DESCRIPTION
 
-This is a plugin to easily interact with ident authentication
-server running on the remote server.
+This plugin provides an interface for querying an ident service on a 
+remote system.  The ident protocol helps identify the user of a 
+particular TCP connection.  If the remote client connecting to your 
+Mojolicious application is running the ident service you can identify 
+the remote users' name.  This can be useful for determining the source 
+of abusive or malicious behavior.  Although ident can be used to 
+authenticate users, it is not recommended for untrusted networks and 
+systems (see CAVEATS below).
+
+Under the covers this plugin uses L<Net::Ident>.
 
 =head1 OPTIONS
 
 =head2 timeout
 
-Number of seconds to wait before timing out in the connection with the
-remote ident server.  The default is 2.
+Default number of seconds to wait before timing out when contacting the remote
+ident server.  The default is 2.
 
 =head1 HELPERS
 
 =head2 ident [ $tx, [ $timeout ] ]
-
-Optionally takes a transaction and timeout arguments.  If not specified
-the current transaction and the configured default will be used.
-
-Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which
-has two fields, username and os.
 
  get '/' => sub {
    my $self = shift;
@@ -62,16 +64,13 @@ has two fields, username and os.
    );
  };
 
-It also has a same_user method which can be use to determine if the
-user on the server and the remote are the same.  The user is considered
-the same if the remote connection came over the loopback address
-(127.0.0.1) and the username matches either the server's username or 
-real uid.
+Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which 
+provides two fields, username and os for the remote connection.  This 
+helper optionally takes two arguments, a transaction ($tx) and a timeout 
+($timeout).  If not specified, the current transaction and the 
+configured default timeout will be used.
 
- under sub { shift->ident_same_user };
- get '/private' => 'private_route';
-
-Throws an exception if
+The ident helper will throw an exception if
 
 =over 4
 
@@ -83,21 +82,31 @@ Throws an exception if
 
 =back
 
+ under sub { eval { shift->ident->same_user } };
+ get '/private' => 'private_route';
+
+The ident response class also has a same_user method which can be used
+to determine if the user which started the Mojolicious application
+and the remote user are the same.  The user is considered the same if the 
+remote connection came over the loopback address (127.0.0.1) and the username
+matches either the server's username or real UID.  Although this can be used
+as a simple authentication method, keep in mind that it may not be secure,
+especially on systems where untrusted users can bind to port 113, such as
+Windows (see CAVEATS below).
+
 =head2 ident_same_user [ $tx, [ $timeout ] ]
 
-Optionally takes a transaction and timeout arguments.  If not specified
-the current transaction and the configured default will be used.
-
-Returns true if the user on the server and the remote are the same.  The
-user is considered the same if the remote connection came over the loopback
-address (127.0.0.1) and the username matches either the server's username
-or real uid.
-
-Returns false if the user is not the same or on any kind of error.  Does
-not throw an exception in the case of connection or ident error.
-
-The result is cached in the session so the ident server only needs to be
-contacted on the first connection.
+This helper reuturns true if the remote user is the same as the user 
+which started the Mojolicious application.  This uses the same_user 
+method on the ident response class described above.  If it is able to 
+connect to the ident service on the remote system it will cache the 
+result so that the remote ident service does not have to be contacted on 
+every HTTP request.  If the user does not match, or if it is unable to 
+contact the remote ident service, or if the connection times out it will 
+return false.  Unlike the ident helper, this one will not throw an 
+exception.  This helper optionally takes two arguments, a transaction 
+($tx) and a timeout ($timeout).  If not specified, the current 
+transaction and the configured default timeout will be used.
 
 =head1 CAVEATS
 

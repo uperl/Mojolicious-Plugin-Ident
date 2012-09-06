@@ -58,10 +58,10 @@ sub _setup
 
 =head2 $ident-E<gt>same_user
 
-Returns true if the remote user is the same as the one which started
-the server.  The user is considered the same if the remote connection 
-came over the loopback address (127.0.0.1) and the username matches 
-either the server's username or real uid.
+Returns true if the remote user is the same as the one which started the 
+Mojolicious application.  The user is considered the same if the remote 
+connection came over the loopback address (127.0.0.1) and the username 
+matches either the server's username or real uid.
 
 =cut
 
