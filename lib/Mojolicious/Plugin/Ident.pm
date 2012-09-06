@@ -25,7 +25,7 @@ use Mojolicious::Plugin::Ident::Response;
  
  # only allow access to the user on localhost which 
  # started the mojolicious lite app
- under sub { eval { shift->ident->same_user } };
+ under sub { shift->ident_same_user };
  
  get '/private' => sub {
    shift->render_text("secret place");
@@ -98,6 +98,12 @@ not throw an exception in the case of connection or ident error.
 
 The result is cached in the session so the ident server only needs to be
 contacted on the first connection.
+
+=head1 CAVEATS
+
+In Windows and possibly other operating systems, an unprivilaged user can
+listen to port 113 and on any untrusted network, a remote ident server is
+not a reliable source for an authentication mechanism.
 
 =cut
 
