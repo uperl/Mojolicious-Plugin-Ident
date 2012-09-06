@@ -75,3 +75,9 @@ sub same_user
 }
 
 1;
+
+=head1 SEE ALSO
+
+L<Mojolicious::Plugin::Ident>
+
+=cut
