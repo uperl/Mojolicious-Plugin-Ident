@@ -142,7 +142,7 @@ sub register
     if($error)
     {
       my $error = "ident error: $error";
-      $app->log->error($error);
+      $controller->app->log->error($error);
       die Mojo::Exception->new($error);
     }
 
