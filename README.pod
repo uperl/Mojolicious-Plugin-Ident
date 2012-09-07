@@ -42,6 +42,8 @@ Under the covers this plugin uses L<Net::Ident>.
 
 =head2 timeout
 
+ plugin 'ident' => { timeout => 60 };
+
 Default number of seconds to wait before timing out when contacting the remote
 ident server.  The default is 2.
 
@@ -89,6 +91,9 @@ especially on systems where untrusted users can bind to port 113, such as
 Windows (see CAVEATS below).
 
 =head2 ident_same_user [ $tx, [ $timeout ] ]
+
+ under sub { shift->ident_same_user };
+ get '/private' => 'private_route';
 
 This helper reuturns true if the remote user is the same as the user 
 which started the Mojolicious application.  This uses the same_user 
