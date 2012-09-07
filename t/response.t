@@ -43,13 +43,13 @@ diag $@ if $@;
 
 SKIP: {
   skip "no uid on windows", 3 if $^O eq 'MSWin32';
-  
+
   is eval { Mojolicious::Plugin::Ident::Response->new( username => $uid, os => 'AwesomeOS', remote_address => '127.0.0.1')->same_user }, 1, "same user based on uid is good";
   diag $@ if $@;
-  
+
   is eval { !Mojolicious::Plugin::Ident::Response->new( username => $uid+20, os => 'AwesomeOS', remote_address => '127.0.0.1')->same_user }, 1, "same user based on uid is bad";
   diag $@ if $@;
-  
+
   is eval { !Mojolicious::Plugin::Ident::Response->new( username => $uid, os => 'AwesomeOS', remote_address => '1.2.3.4')->same_user }, 1, "same user based on hostname is bad (uid)";
   diag $@ if $@;
 };

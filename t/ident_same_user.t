@@ -8,19 +8,19 @@ my $execute_count = 0;
 
 eval q{
   package Net::Ident;
-  
+
   $INC{'Net/Ident.pm'} = __FILE__;
-  
+
   use Test::More;
   use Socket qw( unpack_sockaddr_in inet_ntoa );
-  
+
   sub newFromInAddr
   {
     my($class, $local, $remote, $timeout) = @_;
     $execute_count++;
     bless {}, 'Net::Ident';
   }
-  
+
   sub username { @test_ident_data }
 };
 die $@ if $@;

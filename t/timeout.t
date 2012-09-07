@@ -8,16 +8,16 @@ my $timeout;
 
 eval q{
   package Net::Ident;
-  
+
   $INC{'Net/Ident.pm'} = __FILE__;
-  
+
   sub newFromInAddr
   {
     my($class, $local, $remote, $op_timeout) = @_;
     $timeout = $op_timeout;
     bless {}, 'Net::Ident';
   }
-  
+
   sub username { @test_ident_data }
 };
 die $@ if $@;

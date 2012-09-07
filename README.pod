@@ -95,7 +95,7 @@ Windows (see CAVEATS below).
  under sub { shift->ident_same_user };
  get '/private' => 'private_route';
 
-This helper reuturns true if the remote user is the same as the user 
+This helper returns true if the remote user is the same as the user 
 which started the Mojolicious application.  This uses the same_user 
 method on the ident response class described above.  If it is able to 
 connect to the ident service on the remote system it will cache the 
@@ -109,9 +109,12 @@ transaction and the configured default timeout will be used.
 
 =head1 CAVEATS
 
-In Windows and possibly other operating systems, an unprivilaged user can
+In Windows and possibly other operating systems, an unprivileged user can
 listen to port 113 and on any untrusted network, a remote ident server is
-not a reliable source for an authentication mechanism.
+not a reliable source for an authentication mechanism.  Most modern operating
+systems do not enable the ident service by default, so unless you have
+control both the client and the server and can configure the ident service
+securely on both, its usefulness is reduced.
 
 =head1 AUTHOR
 

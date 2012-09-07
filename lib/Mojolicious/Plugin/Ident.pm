@@ -117,7 +117,10 @@ transaction and the configured default timeout will be used.
 
 In Windows and possibly other operating systems, an unprivileged user can
 listen to port 113 and on any untrusted network, a remote ident server is
-not a reliable source for an authentication mechanism.
+not a reliable source for an authentication mechanism.  Most modern operating
+systems do not enable the ident service by default, so unless you have
+control both the client and the server and can configure the ident service
+securely on both, its usefulness is reduced.
 
 =cut
 

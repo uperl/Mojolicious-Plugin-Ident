@@ -8,29 +8,29 @@ my $port;
 
 eval q{
   package Net::Ident;
-  
+
   $INC{'Net/Ident.pm'} = __FILE__;
-  
+
   use Test::More;
   use Socket qw( unpack_sockaddr_in inet_ntoa );
-  
+
   sub newFromInAddr
   {
     my($class, $local, $remote, $timeout) = @_;
     my($local_port, $local_address) = unpack_sockaddr_in $local;
     my($remote_port, $remote_address) = unpack_sockaddr_in $remote;
-    
+
     ($local_address, $remote_address) = map { inet_ntoa($_) } ($local_address, $remote_address);
-    
+
     is $local_port, $port, "local port = $port";
     like $remote_port, qr{^\d+$}, "remote_port = $remote_port";
     is $local_address, '127.0.0.1', 'local_address = 127.0.0.1';
     is $remote_address, '127.0.0.1', 'remote_address = 127.0.0.1';
     is $timeout, 2, 'timeout = 2';
-    
+
     bless {}, 'Net::Ident';
   }
-  
+
   sub username { @test_ident_data }
 };
 die $@ if $@;
