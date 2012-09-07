@@ -1,4 +1,6 @@
 Revision history for Mojolicious::Plugin::Ident
 
 {{$NEXT}}
-- initial version
+
+0.1       2012-09-07 12:14:02 America/New_York
+  - initial version
