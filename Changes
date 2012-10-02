@@ -2,5 +2,8 @@ Revision history for Mojolicious::Plugin::Ident
 
 {{$NEXT}}
 
+0.2       2012-10-02 15:32:10 America/New_York
+  - fix $VERSION so that it is not undef
+
 0.1       2012-09-07 12:14:02 America/New_York
   - initial version
