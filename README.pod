@@ -1,10 +1,12 @@
+=pod
+
 =head1 NAME
 
 Mojolicious::Plugin::Ident - Mojolicious plugin to interact with a remote ident service
 
 =head1 VERSION
 
-version 0.2
+version 0.21
 
 =head1 SYNOPSIS
 
