@@ -3,6 +3,7 @@ Revision history for Mojolicious::Plugin::Ident
 {{$NEXT}}
 
 0.21      2012-11-29 12:15:36 America/New_York
+  - remove extra deps
 
 0.2       2012-10-02 15:32:10 America/New_York
   - fix $VERSION so that it is not undef
