@@ -1,42 +1,29 @@
 use strict;
 use warnings;
-use Test::More skip_all => 'TODO';
-use Test::More tests => 3;
+use Test::More tests => 2;
 use Test::Mojo;
-
-my @test_ident_data = ( 'foo', 'AwesomeOS', '' );
-my $timeout;
-
-eval q{
-  package Net::Ident;
-
-  $INC{'Net/Ident.pm'} = __FILE__;
-
-  sub newFromInAddr
-  {
-    my($class, $local, $remote, $op_timeout) = @_;
-    $timeout = $op_timeout;
-    bless {}, 'Net::Ident';
-  }
-
-  sub username { @test_ident_data }
-};
-die $@ if $@;
-
+use AnyEvent::Ident qw( ident_server );
 use Mojolicious::Lite;
-plugin 'ident' => { timeout => 4 };
+
+plugin 'ident' => { 
+  port => do {
+    my $server = ident_server '127.0.0.1', 0, sub {
+      my $tx = shift;
+    };
+    $server->bindport;
+  },
+  timeout => 1,
+};
 
 get '/' => sub { shift->render_text('index') };
 
 get '/ident' => sub {
   my($self) = @_;
   my $ident = $self->ident;
-  $self->render_text('good');
+  $self->render_text('okay!');
 };
 
 my $t = Test::Mojo->new;
 
 $t->get_ok("/ident")
-  ->status_is(200);
-
-is $timeout, 4, 'timeout = 4';
+  ->status_is(500);

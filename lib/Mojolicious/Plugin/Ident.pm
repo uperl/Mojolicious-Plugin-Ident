@@ -142,10 +142,15 @@ sub register
   $app->helper(ident => sub {
     my($controller, $tx, $timeout) = @_;
     $tx //= $controller->tx;
+    $timeout //= $default_timeout;
     
     my($username, $os, $error) = ('','','');
     
     my $done = AnyEvent->condvar;
+    
+    my $w = AnyEvent->timer(after => $timeout // $default_timeout, cb => sub {
+      $done->croak("ident timeout");
+    });
     
     ident_client $tx->remote_address, $port, $tx->local_port, $tx->remote_port, sub {
       my $res = shift;
@@ -158,10 +163,11 @@ sub register
       {
         $error = $res->error_type;
       }
-      $done->send;
+      $done->send(1);
     };
     
     $done->recv;
+    undef $w;
 
     if($error)
     {
