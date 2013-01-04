@@ -62,7 +62,41 @@ this for testing or some other purpose.
 
 =head1 HELPERS
 
-=head2 ident [ $tx, [ $timeout ] ]
+=head2 ident [ $tx, [ $timeout ] ] [, $callback ]
+
+This helper makes a ident request.  This helper takes two optional arguments,
+a transaction C<$tx> and a timeout C<$timeout>.  If not specified, the current
+transaction and the configured default timeout will be used.  If a callback
+is provided then the request is non-blocking.  If no callback is provided,
+it will block until a response comes back or the timeout expires.
+
+With a callback:
+
+ get '/' => sub {
+   my $self = shift;
+   $self->ident(sub {
+     my $res = shift;
+     if($res->is_success)
+     {
+       $self->render_text(
+         "username: " . $res->username .
+         "os:       " . $res->os
+       );
+     }
+     else
+     {
+       $self->render_text(
+         "error: " . $res->error_type
+       );
+     }
+   };
+ };
+
+The callback is passed an instance of L<AnyEvent::Ident::Response>.  Even if
+the response is an error.  The C<is_success> method on L<AnyEvent::Ident::Response>
+will tell you if the response is an error or not.
+
+Without a callback
 
  get '/' => sub {
    my $self = shift;
@@ -74,12 +108,10 @@ this for testing or some other purpose.
  };
 
 Returns an instance of L<Mojolicious::Plugin::Ident::Response>, which 
-provides two fields, username and os for the remote connection.  This 
-helper optionally takes two arguments, a transaction ($tx) and a timeout 
-($timeout).  If not specified, the current transaction and the 
-configured default timeout will be used.
+provides two fields, username and os for the remote connection.
 
-The ident helper will throw an exception if
+When called in blocking mode (without a callback), the ident helper will throw 
+an exception if
 
 =over 4
 
@@ -140,17 +172,24 @@ sub register
   my $port = $conf->{port} // 113;
 
   $app->helper(ident => sub {
+    my $callback = pop if ref($_[-1]) eq 'CODE';
     my($controller, $tx, $timeout) = @_;
     $tx //= $controller->tx;
     $timeout //= $default_timeout;
     
-    my($username, $os, $error) = ('','','');
+    if($callback)
+    {
+      ident_client  $tx->remote_address, $port, $tx->local_port, $tx->remote_port, $callback;
+      return;
+    }
     
     my $done = AnyEvent->condvar;
     
     my $w = AnyEvent->timer(after => $timeout // $default_timeout, cb => sub {
       $done->croak("ident timeout");
     });
+    
+    my($username, $os, $error) = ('','','');
     
     ident_client $tx->remote_address, $port, $tx->local_port, $tx->remote_port, sub {
       my $res = shift;

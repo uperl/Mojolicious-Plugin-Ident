@@ -12,6 +12,11 @@ use Mojo::Base -base;
 This class represents the responses as they come back
 from the remote ident server.
 
+NOTE: This class is only used for blocking requests.
+If you provide a callback, then you are probably 
+more interested in L<AnyEvent::Ident::Response>, which
+is similar, but does not have a C<same_user> method.
+
 =head1 ATTRIBUTES
 
 =head2 $ident-E<gt>username
