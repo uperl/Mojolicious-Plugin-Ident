@@ -2,31 +2,31 @@ use strict;
 use warnings;
 use Test::More tests => 15;
 use Test::Mojo;
+use Mojolicious::Lite;
+use AnyEvent::Ident qw( ident_server );
 
-my @test_ident_data = ( 'foo', 'AwesomeOS', '' );
 my $execute_count = 0;
 
-eval q{
-  package Net::Ident;
+my $error = '';
 
-  $INC{'Net/Ident.pm'} = __FILE__;
-
-  use Test::More;
-  use Socket qw( unpack_sockaddr_in inet_ntoa );
-
-  sub newFromInAddr
-  {
-    my($class, $local, $remote, $timeout) = @_;
-    $execute_count++;
-    bless {}, 'Net::Ident';
+plugin 'ident' => { 
+  port => do {
+    my $server = ident_server '127.0.0.1', 0, sub {
+      my $tx = shift;
+      if($error)
+      {
+        $tx->reply_with_error($error);
+      }
+      else
+      {
+        $tx->reply_with_user('AwesomeOS', 'foo');
+      }
+      $execute_count++;
+    };
+    $server->bindport;
   }
-
-  sub username { @test_ident_data }
 };
-die $@ if $@;
 
-use Mojolicious::Lite;
-plugin 'ident';
 under sub { shift->ident_same_user };
 get '/ident' => sub { shift->render_text('okay') };
 
@@ -64,6 +64,6 @@ $t->get_ok('/ident')
 is $execute_count, 2, 'execute_count = 2';
 
 $t->reset_session;
-@test_ident_data = ( '', '', 'ident error' );
+$error = 'ident error';
 $t->get_ok('/ident')
   ->status_is(404);

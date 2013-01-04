@@ -2,29 +2,18 @@ use strict;
 use warnings;
 use Test::More tests => 2;
 use Test::Mojo;
-
-my @test_ident_data = ( '', '', 'some ident error' );
-
-eval q{
-  package Net::Ident;
-
-  $INC{'Net/Ident.pm'} = __FILE__;
-
-  use Test::More;
-  use Socket qw( unpack_sockaddr_in inet_ntoa );
-
-  sub newFromInAddr
-  {
-    my($class, $local, $remote, $timeout) = @_;
-    bless {}, 'Net::Ident';
-  }
-
-  sub username { @test_ident_data }
-};
-die $@ if $@;
-
+use AnyEvent::Ident qw( ident_server );
 use Mojolicious::Lite;
-plugin 'ident';
+
+plugin 'ident' => { 
+  port => do {
+    my $server = ident_server '127.0.0.1', 0, sub {
+      my $tx = shift;
+      $tx->reply_with_error('some ident error');
+    };
+    $server->bindport;
+  }
+};
 
 get '/' => sub { shift->render_text('index') };
 

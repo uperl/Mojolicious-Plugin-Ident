@@ -4,8 +4,8 @@ use strict;
 use warnings;
 use v5.10;
 use Mojo::Base 'Mojolicious::Plugin';
-use Net::Ident;
-use Socket qw( pack_sockaddr_in inet_aton );
+use AnyEvent;
+use AnyEvent::Ident qw( ident_client );
 use Mojo::Exception;
 use Mojolicious::Plugin::Ident::Response;
 
@@ -52,6 +52,13 @@ Under the covers this plugin uses L<Net::Ident>.
 
 Default number of seconds to wait before timing out when contacting the remote
 ident server.  The default is 2.
+
+=head2 port
+
+ plugin 'ident' => { port => 113 };
+
+Port number to connect to.  Usually this will be 113, but you may want to change
+this for testing or some other purpose.
 
 =head1 HELPERS
 
@@ -130,16 +137,31 @@ sub register
   Mojolicious::Plugin::Ident::Response->_setup;
 
   my $default_timeout = $conf->{timeout} // 2;
+  my $port = $conf->{port} // 113;
 
   $app->helper(ident => sub {
     my($controller, $tx, $timeout) = @_;
     $tx //= $controller->tx;
-    my $ident = Net::Ident->newFromInAddr(
-      pack_sockaddr_in($tx->local_port, inet_aton($tx->local_address)),
-      pack_sockaddr_in($tx->remote_port, inet_aton($tx->remote_address)),
-      $timeout // $default_timeout,
-    );
-    my($username, $os, $error) = $ident->username;
+    
+    my($username, $os, $error) = ('','','');
+    
+    my $done = AnyEvent->condvar;
+    
+    ident_client $tx->remote_address, $port, $tx->local_port, $tx->remote_port, sub {
+      my $res = shift;
+      if($res->is_success)
+      {
+        $username = $res->username;
+        $os       = $res->os;
+      }
+      else
+      {
+        $error = $res->error_type;
+      }
+      $done->send;
+    };
+    
+    $done->recv;
 
     if($error)
     {

@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Test::More skip_all => 'TODO';
 use Test::More tests => 3;
 use Test::Mojo;
 

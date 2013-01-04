@@ -1,5 +1,3 @@
-=pod
-
 =head1 NAME
 
 Mojolicious::Plugin::Ident - Mojolicious plugin to interact with a remote ident service
@@ -48,6 +46,13 @@ Under the covers this plugin uses L<Net::Ident>.
 
 Default number of seconds to wait before timing out when contacting the remote
 ident server.  The default is 2.
+
+=head2 port
+
+ plugin 'ident' => { port => 113 };
+
+Port number to connect to.  Usually this will be 113, but you may want to change
+this for testing or some other purpose.
 
 =head1 HELPERS
 
