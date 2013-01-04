@@ -62,7 +62,7 @@ this for testing or some other purpose.
 
 =head1 HELPERS
 
-=head2 ident [ $tx, [ $timeout ] ] [, $callback ]
+=head2 ident [ $tx, [ $timeout ] ], [ $callback ]
 
 This helper makes a ident request.  This helper takes two optional arguments,
 a transaction C<$tx> and a timeout C<$timeout>.  If not specified, the current
@@ -70,7 +70,7 @@ transaction and the configured default timeout will be used.  If a callback
 is provided then the request is non-blocking.  If no callback is provided,
 it will block until a response comes back or the timeout expires.
 
-With a callback:
+With a callback (non-blocking):
 
  get '/' => sub {
    my $self = shift;
@@ -96,7 +96,7 @@ The callback is passed an instance of L<AnyEvent::Ident::Response>.  Even if
 the response is an error.  The C<is_success> method on L<AnyEvent::Ident::Response>
 will tell you if the response is an error or not.
 
-Without a callback
+Without a callback (blocking):
 
  get '/' => sub {
    my $self = shift;
@@ -134,24 +134,45 @@ username matches either the server's username or real UID.  Although
 this can be used as a simple authentication method, keep in mind that it
 may not be secure (see CAVEATS below).
 
-=head2 ident_same_user [ $tx, [ $timeout ] ]
+=head2 ident_same_user [ $tx, [ $timeout ] ], [ $callback ]
+
+This helper makes an ident request and attempts to determine if the 
+user that made the request is the same as the one that started the
+Mojolicious application.  This helper takes two optional arguments,
+a transaction C<$tx> and a timeout C<$timeout>.  If not specified, the current
+transaction and the configured default timeout will be used.  If a callback
+is provided then the request is non-blocking.  If no callback is provided,
+it will block until a response comes back or the timeout expires.
+
+With a callback (non-blocking):
+
+ get '/private' => sub {
+   my $self = shift;
+   $self->ident_same_user(sub {
+     my $same_user = shift;
+     $same_user ? $self->render_text('private text') : $self->render_not_found;
+   });
+ }
+
+When the response comes back it will call the callback and pass in a boolean
+value indicating if the user is the same.  If the ident request connects
+and does not timeout, then result will be cached.  If cached the callback may
+be called immediately, before re-entering the event loop.
+
+Without a callback (blocking):
 
  under sub { shift->ident_same_user };
  get '/private' => 'private_route';
 
-This helper returns true if the remote user is the same as the user 
-which started the Mojolicious application.  This uses the same_user 
-method on the ident response class described above.  If it is able to 
-connect to the ident service on the remote system it will cache the 
-result so that the remote ident service does not have to be contacted on 
-every HTTP request.  If the user does not match, or if it is unable to 
-contact the remote ident service, or if the connection times out it will 
-return false.  Unlike the ident helper, this one will not throw an 
-exception.  This helper optionally takes two arguments, a transaction 
-($tx) and a timeout ($timeout).  If not specified, the current 
-transaction and the configured default timeout will be used.
+without a callback this helper will return true or false depending on
+if the user is the same.  It should never throw an exception.
 
 =head1 CAVEATS
+
+L<The RFC for the ident protocol|http://tools.ietf.org/html/rfc1413>
+clearly states that ident should not be used for authentication, at
+most it should be used only for audit (for example annotating log
+files).
 
 In Windows and possibly other operating systems, an unprivileged user
 can listen to port 113 and on any untrusted network, a remote ident
@@ -172,7 +193,8 @@ sub register
   my $port = $conf->{port} // 113;
 
   $app->helper(ident => sub {
-    my $callback = pop if ref($_[-1]) eq 'CODE';
+    my $callback;
+    $callback = pop if ref($_[-1]) eq 'CODE';
     my($controller, $tx, $timeout) = @_;
     $tx //= $controller->tx;
     $timeout //= $default_timeout;
@@ -223,13 +245,50 @@ sub register
   });
   
   $app->helper(ident_same_user => sub {
+    my $callback;
+    $callback = pop if ref($_[-1]) eq 'CODE';
     my $controller = shift;
-    $controller->session('ident_same_user') // do {
-      my $same_user = eval { $controller->ident(@_)->same_user };
-      return if $@;
-      $controller->session('ident_same_user' => $same_user);
-      $same_user;
-    };
+    
+    if($callback)
+    {
+      my($tx, $timeout) = @_;
+      $tx //= $controller->tx;
+      $timeout //= $default_timeout;
+      
+      if(defined $controller->session('ident_same_user'))
+      {
+        $callback->($controller->session('ident_same_user'));
+      }
+      else
+      {
+        $controller->ident($tx, $timeout, sub {
+          my $res = shift;
+          if($res->is_success)
+          {
+            my $same_user = Mojolicious::Plugin::Ident::Response->new( 
+              os             => $res->os,
+              username       => $res->username,
+              remote_address => $tx->remote_address,
+            )->same_user;
+            $controller->session('ident_same_user' => $same_user);
+            $callback->($same_user);
+          }
+          else
+          {
+            $callback->(0);
+          }
+        });
+      }
+    }
+    else
+    {
+      $controller->session('ident_same_user') // do {
+        my $same_user = eval { $controller->ident(@_)->same_user };
+        return if $@;
+        $controller->session('ident_same_user' => $same_user);
+        $same_user;
+      };
+    }
   });
 }
 
