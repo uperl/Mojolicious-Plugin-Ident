@@ -17,10 +17,25 @@ use Mojolicious::Plugin::Ident::Response;
  use Mojolicious::Lite;
  plugin 'ident';
  
+ # log the ident user for every connection (async ident)
+ under sub {
+   shift->ident(sub {
+     my $res = shift; # $res isa AnyEvent::Ident::Response
+     if($res->is_success) {
+       app->log->info("ident user is " . $res->username);
+     } else {
+       app->log->info("unable to ident remote user");
+     }
+   });
+
+   1;
+ };
+ 
  # get the username of the remote using ident protocol
  get '/' => sub {
    my $self = shift;
-   $self->render_text("hello " . $self->ident->username);
+   my $res = $self->ident; # $res isa Mojolicious::Plugin::Ident::Response
+   $self->render_text("hello " . $res->username);
  };
  
  # only allow access to the user on localhost which 
@@ -201,7 +216,7 @@ sub register
     
     if($callback)
     {
-      ident_client  $tx->remote_address, $port, $tx->local_port, $tx->remote_port, $callback;
+      ident_client $tx->remote_address, $port, $tx->remote_port, $tx->local_port, $callback;
       return;
     }
     
@@ -213,7 +228,7 @@ sub register
     
     my($username, $os, $error) = ('','','');
     
-    ident_client $tx->remote_address, $port, $tx->local_port, $tx->remote_port, sub {
+    ident_client $tx->remote_address, $port, $tx->remote_port, $tx->local_port, sub {
       my $res = shift;
       if($res->is_success)
       {
