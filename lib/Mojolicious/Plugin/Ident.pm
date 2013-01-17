@@ -5,7 +5,7 @@ use warnings;
 use v5.10;
 use Mojo::Base 'Mojolicious::Plugin';
 use AnyEvent;
-use AnyEvent::Ident qw( ident_client );
+use AnyEvent::Ident::Client;
 use Mojo::Exception;
 use Mojolicious::Plugin::Ident::Response;
 
@@ -20,9 +20,10 @@ use Mojolicious::Plugin::Ident::Response;
  # log the ident user for every connection (async ident)
  under sub {
    shift->ident(sub {
-     my $res = shift; # $res isa AnyEvent::Ident::Response
-     if($res->is_success) {
-       app->log->info("ident user is " . $res->username);
+     my $id_res = shift; # $id_res isa Mojolicious::Plugin::Ident::Response
+                         #      isa AnyEvent::Ident::Response
+     if($id_res->is_success) {
+       app->log->info("ident user is " . $id_res->username);
      } else {
        app->log->info("unable to ident remote user");
      }
@@ -34,8 +35,9 @@ use Mojolicious::Plugin::Ident::Response;
  # get the username of the remote using ident protocol
  get '/' => sub {
    my $self = shift;
-   my $res = $self->ident; # $res isa Mojolicious::Plugin::Ident::Response
-   $self->render_text("hello " . $res->username);
+   my $id_res = $self->ident; # $id_res isa Mojolicious::Plugin::Ident::Response
+                              #      isa AnyEvent::Ident::Response
+   $self->render_text("hello " . $id_res->username);
  };
  
  # only allow access to the user on localhost which 
@@ -57,7 +59,7 @@ of abusive or malicious behavior.  Although ident can be used to
 authenticate users, it is not recommended for untrusted networks and 
 systems (see CAVEATS below).
 
-Under the covers this plugin uses L<Net::Ident>.
+Under the covers this plugin uses L<AnyEvent::Ident>.
 
 =head1 OPTIONS
 
@@ -90,7 +92,7 @@ With a callback (non-blocking):
  get '/' => sub {
    my $self = shift;
    $self->ident(sub {
-     my $res = shift;
+     my $res = shift->res;
      if($res->is_success)
      {
        $self->render_text(
@@ -107,8 +109,8 @@ With a callback (non-blocking):
    };
  };
 
-The callback is passed an instance of L<AnyEvent::Ident::Response>.  Even if
-the response is an error.  The C<is_success> method on L<AnyEvent::Ident::Response>
+The callback is passed an instance of L<Mojolicious::Plugin::Ident::Response>.  Even if
+the response is an error.  The C<is_success> method on L<Mojolicious::Plugin::Ident::Response>
 will tell you if the response is an error or not.
 
 Without a callback (blocking):
@@ -207,6 +209,10 @@ sub register
   my $default_timeout = $conf->{timeout} // 2;
   my $port = $conf->{port} // 113;
 
+  my $ident = AnyEvent::Ident::Client->new(
+    response_class => 'Mojolicious::Plugin::Ident::Response',
+  );
+  
   $app->helper(ident => sub {
     my $callback;
     $callback = pop if ref($_[-1]) eq 'CODE';
@@ -216,7 +222,14 @@ sub register
     
     if($callback)
     {
-      ident_client $tx->remote_address, $port, $tx->remote_port, $tx->local_port, $callback;
+      AnyEvent::Ident::Client
+        ->new( response_class => 'Mojolicious::Plugin::Ident::Response', hostname => $tx->remote_address, port => $port )
+        ->ident($tx->remote_port, $tx->local_port, sub {
+          my $ident_response = shift;
+          $ident_response->{remote_address} = $tx->remote_address;
+          $callback->($ident_response) 
+        }
+      );
       return;
     }
     
@@ -226,37 +239,30 @@ sub register
       $done->croak("ident timeout");
     });
     
-    my($username, $os, $error) = ('','','');
+    my $ident_response;
     
-    ident_client $tx->remote_address, $port, $tx->remote_port, $tx->local_port, sub {
-      my $res = shift;
-      if($res->is_success)
-      {
-        $username = $res->username;
-        $os       = $res->os;
+    AnyEvent::Ident::Client
+      ->new( response_class => 'Mojolicious::Plugin::Ident::Response', hostname => $tx->remote_address, port => $port )
+      ->ident($tx->remote_port, $tx->local_port, sub {
+        $ident_response = shift;
+        $ident_response->{remote_address} = $tx->remote_address;
+        $done->send(1);
       }
-      else
-      {
-        $error = $res->error_type;
-      }
-      $done->send(1);
-    };
+    );
     
     $done->recv;
     undef $w;
 
-    if($error)
+    if($ident_response->is_success)
     {
-      my $error = "ident error: $error";
+      return $ident_response;
+    }
+    else
+    {
+      my $error = 'ident error: ' . $ident_response->error_type;
       $controller->app->log->error($error);
       die Mojo::Exception->new($error);
     }
-
-    Mojolicious::Plugin::Ident::Response->new( 
-      os             => $os,
-      username       => $username,
-      remote_address => $tx->remote_address,
-    );
   });
   
   $app->helper(ident_same_user => sub {
@@ -280,11 +286,7 @@ sub register
           my $res = shift;
           if($res->is_success)
           {
-            my $same_user = Mojolicious::Plugin::Ident::Response->new( 
-              os             => $res->os,
-              username       => $res->username,
-              remote_address => $tx->remote_address,
-            )->same_user;
+            my $same_user = $res->same_user;
             $controller->session('ident_same_user' => $same_user);
             $callback->($same_user);
           }

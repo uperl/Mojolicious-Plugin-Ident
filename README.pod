@@ -14,9 +14,10 @@ version 0.22
  # log the ident user for every connection (async ident)
  under sub {
    shift->ident(sub {
-     my $res = shift; # $res isa AnyEvent::Ident::Response
-     if($res->is_success) {
-       app->log->info("ident user is " . $res->username);
+     my $id_res = shift; # $id_res isa Mojolicious::Plugin::Ident::Response
+                         #      isa AnyEvent::Ident::Response
+     if($id_res->is_success) {
+       app->log->info("ident user is " . $id_res->username);
      } else {
        app->log->info("unable to ident remote user");
      }
@@ -28,8 +29,9 @@ version 0.22
  # get the username of the remote using ident protocol
  get '/' => sub {
    my $self = shift;
-   my $res = $self->ident; # $res isa Mojolicious::Plugin::Ident::Response
-   $self->render_text("hello " . $res->username);
+   my $id_res = $self->ident; # $id_res isa Mojolicious::Plugin::Ident::Response
+                              #      isa AnyEvent::Ident::Response
+   $self->render_text("hello " . $id_res->username);
  };
  
  # only allow access to the user on localhost which 
@@ -51,7 +53,7 @@ of abusive or malicious behavior.  Although ident can be used to
 authenticate users, it is not recommended for untrusted networks and 
 systems (see CAVEATS below).
 
-Under the covers this plugin uses L<Net::Ident>.
+Under the covers this plugin uses L<AnyEvent::Ident>.
 
 =head1 OPTIONS
 
@@ -84,7 +86,7 @@ With a callback (non-blocking):
  get '/' => sub {
    my $self = shift;
    $self->ident(sub {
-     my $res = shift;
+     my $res = shift->res;
      if($res->is_success)
      {
        $self->render_text(
@@ -101,8 +103,8 @@ With a callback (non-blocking):
    };
  };
 
-The callback is passed an instance of L<AnyEvent::Ident::Response>.  Even if
-the response is an error.  The C<is_success> method on L<AnyEvent::Ident::Response>
+The callback is passed an instance of L<Mojolicious::Plugin::Ident::Response>.  Even if
+the response is an error.  The C<is_success> method on L<Mojolicious::Plugin::Ident::Response>
 will tell you if the response is an error or not.
 
 Without a callback (blocking):

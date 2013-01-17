@@ -20,7 +20,7 @@ get '/' => sub { shift->render_text('index') };
 get '/ident' => sub {
   my($self) = @_;
   my $ident = $self->ident;
-  $self->render_json({ username => $ident->username, os => $ident->os, remote_address => $ident->remote_address });
+  $self->render_json({ username => $ident->username, os => $ident->os, remote_address => $ident->{remote_address} });
 };
 
 my $t = Test::Mojo->new;

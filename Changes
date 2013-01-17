@@ -1,6 +1,9 @@
 Revision history for Mojolicious::Plugin::Ident
 
 {{$NEXT}}
+  - Make M::P::I::Response inherit from AE::I::Response
+    in order to simplify the interface and make non-blocking
+    more like blocking mode
 
 0.22      2013-01-15 11:49:31 America/New_York
   - Migrate from Net::Ident to AnyEvent::Ident
