@@ -9,10 +9,12 @@ use base qw( AnyEvent::Ident::Response );
 
 =head1 DESCRIPTION
 
-L<Mojolicious::Plugin::Ident::Response> is a L<AnyEvent::Ident::Response>.
-
 This class represents the responses as they come back
 from the remote ident server.
+
+L<Mojolicious::Plugin::Ident::Response> is a L<AnyEvent::Ident::Response>.
+The base class is subject to change in a future version, although it
+this class will always provide the interface documented here.
 
 =head1 ATTRIBUTES
 

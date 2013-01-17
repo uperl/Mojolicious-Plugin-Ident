@@ -21,7 +21,6 @@ use Mojolicious::Plugin::Ident::Response;
  under sub {
    shift->ident(sub {
      my $id_res = shift; # $id_res isa Mojolicious::Plugin::Ident::Response
-                         #      isa AnyEvent::Ident::Response
      if($id_res->is_success) {
        app->log->info("ident user is " . $id_res->username);
      } else {
@@ -36,7 +35,6 @@ use Mojolicious::Plugin::Ident::Response;
  get '/' => sub {
    my $self = shift;
    my $id_res = $self->ident; # $id_res isa Mojolicious::Plugin::Ident::Response
-                              #      isa AnyEvent::Ident::Response
    $self->render_text("hello " . $id_res->username);
  };
  
@@ -209,10 +207,6 @@ sub register
   my $default_timeout = $conf->{timeout} // 2;
   my $port = $conf->{port} // 113;
 
-  my $ident = AnyEvent::Ident::Client->new(
-    response_class => 'Mojolicious::Plugin::Ident::Response',
-  );
-  
   $app->helper(ident => sub {
     my $callback;
     $callback = pop if ref($_[-1]) eq 'CODE';
