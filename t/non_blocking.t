@@ -14,6 +14,7 @@ plugin 'ident' => {
       };
       diag "died in server callback: $@" if $@;
     };
+    diag "ident port: " . $server->bindport;
     $server->bindport;
   }
 };
