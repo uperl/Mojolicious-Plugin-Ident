@@ -8,8 +8,11 @@ use Mojolicious::Lite;
 plugin 'ident' => { 
   port => do {
     my $server = ident_server '127.0.0.1', 0, sub {
-      my $tx = shift;
-      $tx->reply_with_user('AwesomeOS', 'foo');
+      eval {
+        my $tx = shift;
+        $tx->reply_with_user('AwesomeOS', 'foo');
+      };
+      diag "died in server callback: $@" if $@;
     };
     $server->bindport;
   }
@@ -19,10 +22,16 @@ get '/' => sub { shift->render_text('index') };
 
 get '/ident' => sub {
   my($self) = @_;
-  $self->ident(sub {
-    my $res = shift;
-    $self->render_json({ username => $res->username, os => $res->os });
-  });
+  eval {
+    $self->ident(sub {
+      eval {
+        my $res = shift;
+        $self->render_json({ username => $res->username, os => $res->os });
+      };
+      diag "died in ident client callback: $@" if $@;
+    });
+  };
+  diag "died in mojo callback: $@" if $@;
 };
 
 my $t = Test::Mojo->new;
@@ -32,3 +41,4 @@ $t->get_ok("/ident")
   ->json_is('/username',       'foo')
   ->json_is('/os',             'AwesomeOS');
 
+diag "AE::detect = " . AnyEvent::detect();
