@@ -190,6 +190,14 @@ systems do not enable the ident service by default, so unless you have
 control both the client and the server and can configure the ident
 service securely on both, its usefulness is reduced.
 
+Using this module in the non-blocking mode requires that L<AnyEvent> use 
+its L<EV> implementation, which is also used by L<Mojolicious>, if it is 
+loaded.  This shouldn't be a problem, as L<EV> is a prerequisite to this 
+module (though it does not use it directly), and both L<AnyEvent> and 
+L<Mojolicious> will prefer to use L<EV> if it is installed.  You do have 
+to make sure that you do not force another event loop, such as 
+L<AnyEvent::Loop>, unless you are using only the blocking mode.
+
 =head1 AUTHOR
 
 Graham Ollis <plicease@cpan.org>
