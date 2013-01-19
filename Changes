@@ -1,6 +1,8 @@
 Revision history for Mojolicious::Plugin::Ident
 
 {{$NEXT}}
+
+0.26      2013-01-19 09:00:51 America/New_York
   - Make EV (not AE) a prereq (non-blocking mode does
     not work with other event loops)
   - documentation updates
