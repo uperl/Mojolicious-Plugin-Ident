@@ -2,7 +2,8 @@ package Mojolicious::Plugin::Ident::Response;
 
 use strict;
 use warnings;
-use base qw( AnyEvent::Ident::Response );
+use AnyEvent::Ident::Response;
+our @ISA = qw( AnyEvent::Ident::Response );
 
 # ABSTRACT: Ident response object
 # VERSION
