@@ -7,10 +7,12 @@ use Mojolicious::Lite;
 
 plugin 'ident' => { 
   port => do {
+    use AnyEvent;
+    my $bind = AnyEvent->condvar;
     my $server = ident_server '127.0.0.1', 0, sub {
       my $tx = shift;
-    };
-    $server->bindport;
+    }, { on_bind => sub { $bind->send(shift) } };
+    $bind->recv->bindport;
   },
   timeout => 1,
 };

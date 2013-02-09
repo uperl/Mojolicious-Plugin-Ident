@@ -7,11 +7,13 @@ use Mojolicious::Lite;
 
 plugin 'ident' => { 
   port => do {
+    use AnyEvent;
+    my $bind = AnyEvent->condvar;
     my $server = ident_server '127.0.0.1', 0, sub {
       my $tx = shift;
       $tx->reply_with_user('AwesomeOS', 'foo');
-    };
-    $server->bindport;
+    }, { on_bind => sub { $bind->send(shift) } };
+    $bind->recv->bindport;
   }
 };
 
