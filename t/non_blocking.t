@@ -43,4 +43,4 @@ $t->get_ok("/ident")
   ->json_is('/username',       'foo')
   ->json_is('/os',             'AwesomeOS');
 
-diag "AE::detect = " . AnyEvent::detect();
+#diag "AE::detect = " . AnyEvent::detect();
