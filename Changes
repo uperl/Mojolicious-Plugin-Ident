@@ -1,6 +1,8 @@
 Revision history for Mojolicious::Plugin::Ident
 
 {{$NEXT}}
+
+0.28      2013-02-09 18:53:06 America/New_York
   - rm dep base
 
 0.27      2013-02-09 09:55:14 America/New_York
