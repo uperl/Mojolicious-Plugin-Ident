@@ -1,6 +1,8 @@
 Revision history for Mojolicious::Plugin::Ident
 
 {{$NEXT}}
+
+0.29      2013-05-17 12:04:57 America/New_York
   - Mojolicious 4.0 compatability
 
 0.28      2013-02-09 18:53:06 America/New_York
