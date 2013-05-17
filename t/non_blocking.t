@@ -20,7 +20,7 @@ plugin 'ident' => {
   }
 };
 
-get '/' => sub { shift->render_text('index') };
+get '/' => sub { shift->render(text => 'index') };
 
 get '/ident' => sub {
   my($self) = @_;
@@ -28,7 +28,7 @@ get '/ident' => sub {
     $self->ident(sub {
       eval {
         my $res = shift;
-        $self->render_json({ username => $res->username, os => $res->os });
+        $self->render(json => { username => $res->username, os => $res->os });
       };
       diag "died in ident client callback: $@" if $@;
     });

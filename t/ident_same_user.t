@@ -30,7 +30,7 @@ plugin 'ident' => {
 };
 
 under sub { shift->ident_same_user };
-get '/ident' => sub { shift->render_text('okay') };
+get '/ident' => sub { shift->render(text => 'okay') };
 
 my $same_user;
 

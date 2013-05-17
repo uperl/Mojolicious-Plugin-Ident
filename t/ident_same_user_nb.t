@@ -33,7 +33,7 @@ get '/ident' => sub {
   my $self = shift;
   $self->ident_same_user(sub {
     my($same) = @_;
-    $same ? $self->render_text('ok') : $self->render_not_found;
+    $same ? $self->render(text => 'ok') : $self->render_not_found;
   });
 };
 
