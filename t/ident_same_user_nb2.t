@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-BEGIN { if(q{ use Mojolicious 4.28; 1 }) { plan tests => 15 } else { plan skip_all => 'Requires Mojolicious 4.28' } }
+BEGIN { if(eval q{ use Mojolicious 4.28; 1 }) { plan tests => 15 } else { plan skip_all => 'Requires Mojolicious 4.28' } }
 use Test::Mojo;
 use Mojolicious::Lite;
 use AnyEvent::Ident qw( ident_server );
