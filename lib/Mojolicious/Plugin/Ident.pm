@@ -38,8 +38,31 @@ use Mojolicious::Plugin::Ident::Response;
    $self->render(text => "hello " . $id_res->username);
  };
  
+ # only allow access to the user on localhost which
+ # started the mojolicious lite app with non-blocking
+ # ident call (requires Mojolicious 4.28)
+ under sub {
+   my($self) = @_;
+   $self->ident_same_user(sub {
+     my($same) = @_;
+     unless($same) {
+       return $self->render(
+         text   => 'permission denied',
+         status => 403,
+       );
+     }
+     $self->continue;
+   });
+   return undef;
+ };
+ 
+ get '/private' => sub {
+   shift->render(text => "secret place");
+ };
+ 
  # only allow access to the user on localhost which 
- # started the mojolicious lite app
+ # started the mojolicious lite app (all versions of
+ # Mojolicious)
  under sub {
    my($self) = @_;
    if($self->ident_same_user) {
@@ -319,7 +342,9 @@ sub register
       
       if(defined $controller->session('ident_same_user'))
       {
-        $callback->($controller->session('ident_same_user'));
+        Mojo::IOLoop->timer(0 => sub {
+          $callback->($controller->session('ident_same_user'));
+        });
       }
       else
       {
