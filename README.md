@@ -4,7 +4,7 @@ Mojolicious plugin to interact with a remote ident service
 
 # VERSION
 
-version 0.28
+version 0.30
 
 # SYNOPSIS
 
@@ -31,17 +31,52 @@ version 0.28
     get '/' => sub {
       my $self = shift;
       my $id_res = $self->ident; # $id_res isa Mojolicious::Plugin::Ident::Response
-      $self->render_text("hello " . $id_res->username);
+      $self->render(text => "hello " . $id_res->username);
+    };
+    
+
+    # only allow access to the user on localhost which
+    # started the mojolicious lite app with non-blocking
+    # ident call (requires Mojolicious 4.28)
+    under sub {
+      my($self) = @_;
+      $self->ident_same_user(sub {
+        my($same) = @_;
+        unless($same) {
+          return $self->render(
+            text   => 'permission denied',
+            status => 403,
+          );
+        }
+        $self->continue;
+      });
+      return undef;
+    };
+    
+
+    get '/private' => sub {
+      shift->render(text => "secret place");
     };
     
 
     # only allow access to the user on localhost which 
-    # started the mojolicious lite app
-    under sub { shift->ident_same_user };
+    # started the mojolicious lite app (all versions of
+    # Mojolicious)
+    under sub {
+      my($self) = @_;
+      if($self->ident_same_user) {
+        return 1;
+      } else {
+        $self->render(
+          text   => 'permission denied',
+          status => 403,
+        );
+      }
+    };
     
 
     get '/private' => sub {
-      shift->render_text("secret place");
+      shift->render(text => "secret place");
     };
 
 # DESCRIPTION
@@ -91,14 +126,14 @@ With a callback (non-blocking):
         my $res = shift->res;
         if($res->is_success)
         {
-          $self->render_text(
+          $self->render(text =>
             "username: " . $res->username .
             "os:       " . $res->os
           );
         }
         else
         {
-          $self->render_text(
+          $self->render(text =>
             "error: " . $res->error_type
           );
         }
@@ -114,7 +149,7 @@ Without a callback (blocking):
     get '/' => sub {
       my $self = shift;
       my $ident = $self->ident;
-      $self->render_text(
+      $self->render(text =>
         "username: " . $ident->username .
         "os:       " . $ident->os
       );
@@ -157,7 +192,7 @@ With a callback (non-blocking):
       my $self = shift;
       $self->ident_same_user(sub {
         my $same_user = shift;
-        $same_user ? $self->render_text('private text') : $self->render_not_found;
+        $same_user ? $self->render(text => 'private text') : $self->render_not_found;
       });
     }
 
@@ -195,6 +230,35 @@ module (though it does not use it directly), and both [AnyEvent](http://search.c
 [Mojolicious](http://search.cpan.org/perldoc?Mojolicious) will prefer to use [EV](http://search.cpan.org/perldoc?EV) if it is installed.  You do have 
 to make sure that you do not force another event loop, such as 
 [AnyEvent::Loop](http://search.cpan.org/perldoc?AnyEvent::Loop), unless you are using only the blocking mode.
+
+[Mojolicious](http://search.cpan.org/perldoc?Mojolicious) 4.28 introduced support for non-blocking operations in bridges.
+Prior to that if a bridge returned false the server would generate a
+404 "Not Found" reply.  In 4.29 a bridge returning false would not render
+anything and thus timeout if the bridge didn't render anything.  Thus in
+older versions of [Mojolicious](http://search.cpan.org/perldoc?Mojolicious) this:
+
+    under sub { shift->ident_same_user };
+
+would return 404 if the remote and local users are not the same.  To get the
+same behavior in both new and old versions of [Mojolicious](http://search.cpan.org/perldoc?Mojolicious):
+
+    under sub {
+      my($self) = @_;
+      if($self->ident_same_user) {
+        return 0;
+      } else {
+        $self->render_not_found;
+        return 1;
+      }
+    };
+
+Most of the time you should really return a 403, instead of not found (as in
+the synopsis above), but this is what you would want to do if you wanted a
+resource to be invisible and unavailable rather than just unavailable to the
+wrong user.
+
+I only mention this because old versions of this plugin had documentation
+which included the older form in its synopsis.
 
 # AUTHOR
 
