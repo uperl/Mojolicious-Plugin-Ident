@@ -1,6 +1,7 @@
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More;
+BEGIN { if(eval q{ use Mojolicious 4.28; 1 }) { plan tests => 15 } else { plan skip_all => 'Requires Mojolicious 4.28' } }
 use Test::Mojo;
 use Mojolicious::Lite;
 use AnyEvent::Ident qw( ident_server );
@@ -30,11 +31,18 @@ plugin 'ident' => {
 };
 
 under sub {
-  my $self = shift;
-  $self->ident_same_user ? 1 : $self->render_not_found && 0;
+  my($self) = @_;
+  $self->ident_same_user(sub {
+    my($same) = @_;
+    return $self->render_not_found unless $same;
+    $self->continue;
+  });
+  return undef;
 };
 
-get '/ident' => sub { shift->render(text => 'okay') };
+get '/ident' => sub { 
+  shift->render(text => 'ok');
+};
 
 my $same_user;
 

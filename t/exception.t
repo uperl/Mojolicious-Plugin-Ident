@@ -17,12 +17,12 @@ plugin 'ident' => {
   }
 };
 
-get '/' => sub { shift->render_text('index') };
+get '/' => sub { shift->render(text => 'index') };
 
 get '/ident' => sub {
   my($self) = @_;
   my $ident = $self->ident;
-  $self->render_text('okay!');
+  $self->render(text => 'okay!');
 };
 
 my $t = Test::Mojo->new;
