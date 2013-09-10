@@ -2,16 +2,11 @@
 
 Mojolicious plugin to interact with a remote ident service
 
-# VERSION
-
-version 0.30
-
 # SYNOPSIS
 
     use Mojolicious::Lite;
     plugin 'ident';
     
-
     # log the ident user for every connection (async ident)
     under sub {
       shift->ident(sub {
@@ -26,7 +21,6 @@ version 0.30
       1;
     };
     
-
     # get the username of the remote using ident protocol
     get '/' => sub {
       my $self = shift;
@@ -34,7 +28,6 @@ version 0.30
       $self->render(text => "hello " . $id_res->username);
     };
     
-
     # only allow access to the user on localhost which
     # started the mojolicious lite app with non-blocking
     # ident call (requires Mojolicious 4.28)
@@ -53,12 +46,10 @@ version 0.30
       return undef;
     };
     
-
     get '/private' => sub {
       shift->render(text => "secret place");
     };
     
-
     # only allow access to the user on localhost which 
     # started the mojolicious lite app (all versions of
     # Mojolicious)
@@ -74,7 +65,6 @@ version 0.30
       }
     };
     
-
     get '/private' => sub {
       shift->render(text => "secret place");
     };
