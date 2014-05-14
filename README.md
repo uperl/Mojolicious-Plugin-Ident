@@ -80,7 +80,7 @@ of abusive or malicious behavior.  Although ident can be used to
 authenticate users, it is not recommended for untrusted networks and 
 systems (see CAVEATS below).
 
-Under the covers this plugin uses [AnyEvent::Ident](http://search.cpan.org/perldoc?AnyEvent::Ident).
+Under the covers this plugin uses [AnyEvent::Ident](https://metacpan.org/pod/AnyEvent::Ident).
 
 # OPTIONS
 
@@ -130,8 +130,8 @@ With a callback (non-blocking):
       };
     };
 
-The callback is passed an instance of [Mojolicious::Plugin::Ident::Response](http://search.cpan.org/perldoc?Mojolicious::Plugin::Ident::Response).  Even if
-the response is an error.  The `is_success` method on [Mojolicious::Plugin::Ident::Response](http://search.cpan.org/perldoc?Mojolicious::Plugin::Ident::Response)
+The callback is passed an instance of [Mojolicious::Plugin::Ident::Response](https://metacpan.org/pod/Mojolicious::Plugin::Ident::Response).  Even if
+the response is an error.  The `is_success` method on [Mojolicious::Plugin::Ident::Response](https://metacpan.org/pod/Mojolicious::Plugin::Ident::Response)
 will tell you if the response is an error or not.
 
 Without a callback (blocking):
@@ -145,7 +145,7 @@ Without a callback (blocking):
       );
     };
 
-Returns an instance of [Mojolicious::Plugin::Ident::Response](http://search.cpan.org/perldoc?Mojolicious::Plugin::Ident::Response), which 
+Returns an instance of [Mojolicious::Plugin::Ident::Response](https://metacpan.org/pod/Mojolicious::Plugin::Ident::Response), which 
 provides two fields, username and os for the remote connection.
 
 When called in blocking mode (without a callback), the ident helper will throw 
@@ -213,24 +213,24 @@ systems do not enable the ident service by default, so unless you have
 control both the client and the server and can configure the ident
 service securely on both, its usefulness is reduced.
 
-Using this module in the non-blocking mode requires that [AnyEvent](http://search.cpan.org/perldoc?AnyEvent) use 
-its [EV](http://search.cpan.org/perldoc?EV) implementation, which is also used by [Mojolicious](http://search.cpan.org/perldoc?Mojolicious), if it is 
-loaded.  This shouldn't be a problem, as [EV](http://search.cpan.org/perldoc?EV) is a prerequisite to this 
-module (though it does not use it directly), and both [AnyEvent](http://search.cpan.org/perldoc?AnyEvent) and 
-[Mojolicious](http://search.cpan.org/perldoc?Mojolicious) will prefer to use [EV](http://search.cpan.org/perldoc?EV) if it is installed.  You do have 
+Using this module in the non-blocking mode requires that [AnyEvent](https://metacpan.org/pod/AnyEvent) use 
+its [EV](https://metacpan.org/pod/EV) implementation, which is also used by [Mojolicious](https://metacpan.org/pod/Mojolicious), if it is 
+loaded.  This shouldn't be a problem, as [EV](https://metacpan.org/pod/EV) is a prerequisite to this 
+module (though it does not use it directly), and both [AnyEvent](https://metacpan.org/pod/AnyEvent) and 
+[Mojolicious](https://metacpan.org/pod/Mojolicious) will prefer to use [EV](https://metacpan.org/pod/EV) if it is installed.  You do have 
 to make sure that you do not force another event loop, such as 
-[AnyEvent::Loop](http://search.cpan.org/perldoc?AnyEvent::Loop), unless you are using only the blocking mode.
+[AnyEvent::Loop](https://metacpan.org/pod/AnyEvent::Loop), unless you are using only the blocking mode.
 
-[Mojolicious](http://search.cpan.org/perldoc?Mojolicious) 4.28 introduced support for non-blocking operations in bridges.
+[Mojolicious](https://metacpan.org/pod/Mojolicious) 4.28 introduced support for non-blocking operations in bridges.
 Prior to that if a bridge returned false the server would generate a
 404 "Not Found" reply.  In 4.29 a bridge returning false would not render
 anything and thus timeout if the bridge didn't render anything.  Thus in
-older versions of [Mojolicious](http://search.cpan.org/perldoc?Mojolicious) this:
+older versions of [Mojolicious](https://metacpan.org/pod/Mojolicious) this:
 
     under sub { shift->ident_same_user };
 
 would return 404 if the remote and local users are not the same.  To get the
-same behavior in both new and old versions of [Mojolicious](http://search.cpan.org/perldoc?Mojolicious):
+same behavior in both new and old versions of [Mojolicious](https://metacpan.org/pod/Mojolicious):
 
     under sub {
       my($self) = @_;
