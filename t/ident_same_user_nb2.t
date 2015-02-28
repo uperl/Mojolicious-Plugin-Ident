@@ -34,7 +34,7 @@ under sub {
   my($self) = @_;
   $self->ident_same_user(sub {
     my($same) = @_;
-    return $self->render_not_found unless $same;
+    return $self->reply->not_found unless $same;
     $self->continue;
   });
   return undef;

@@ -182,7 +182,7 @@ With a callback (non-blocking):
       my $self = shift;
       $self->ident_same_user(sub {
         my $same_user = shift;
-        $same_user ? $self->render(text => 'private text') : $self->render_not_found;
+        $same_user ? $self->render(text => 'private text') : $self->reply->not_found;
       });
     }
 
@@ -237,7 +237,7 @@ same behavior in both new and old versions of [Mojolicious](https://metacpan.org
       if($self->ident_same_user) {
         return 0;
       } else {
-        $self->render_not_found;
+        $self->reply->not_found;
         return 1;
       }
     };

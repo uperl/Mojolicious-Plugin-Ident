@@ -31,7 +31,7 @@ plugin 'ident' => {
 
 under sub {
   my $self = shift;
-  $self->ident_same_user ? 1 : $self->render_not_found && 0;
+  $self->ident_same_user ? 1 : $self->reply->not_found && 0;
 };
 
 get '/ident' => sub { shift->render(text => 'okay') };
