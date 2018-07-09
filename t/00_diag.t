@@ -16,8 +16,6 @@ $modules{$_} = $_ for qw(
   EV
   ExtUtils::MakeMaker
   Mojolicious
-  Mojolicious::Lite
-  Test::Mojo
   Test::More
 );
 
