@@ -1,73 +1,75 @@
-# Mojolicious::Plugin::Ident [![Build Status](https://secure.travis-ci.org/plicease/Mojolicious-Plugin-Ident.png)](http://travis-ci.org/plicease/Mojolicious-Plugin-Ident)
+# Mojolicious::Plugin::Ident ![linux](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/linux/badge.svg) ![macos](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/macos/badge.svg) ![cygwin](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/cygwin/badge.svg)
 
 Mojolicious plugin to interact with a remote ident service
 
 # SYNOPSIS
 
-    use Mojolicious::Lite;
-    plugin 'ident';
-    
-    # log the ident user for every connection (async ident)
-    under sub {
-      shift->ident(sub {
-        my $id_res = shift; # $id_res isa Mojolicious::Plugin::Ident::Response
-        if($id_res->is_success) {
-          app->log->info("ident user is " . $id_res->username);
-        } else {
-          app->log->info("unable to ident remote user");
-        }
-      });
+```perl
+use Mojolicious::Lite;
+plugin 'ident';
 
-      1;
-    };
-    
-    # get the username of the remote using ident protocol
-    get '/' => sub {
-      my $self = shift;
-      my $id_res = $self->ident; # $id_res isa Mojolicious::Plugin::Ident::Response
-      $self->render(text => "hello " . $id_res->username);
-    };
-    
-    # only allow access to the user on localhost which
-    # started the mojolicious lite app with non-blocking
-    # ident call (requires Mojolicious 4.28)
-    under sub {
-      my($self) = @_;
-      $self->ident_same_user(sub {
-        my($same) = @_;
-        unless($same) {
-          return $self->render(
-            text   => 'permission denied',
-            status => 403,
-          );
-        }
-        $self->continue;
-      });
-      return undef;
-    };
-    
-    get '/private' => sub {
-      shift->render(text => "secret place");
-    };
-    
-    # only allow access to the user on localhost which 
-    # started the mojolicious lite app (all versions of
-    # Mojolicious)
-    under sub {
-      my($self) = @_;
-      if($self->ident_same_user) {
-        return 1;
-      } else {
-        $self->render(
-          text   => 'permission denied',
-          status => 403,
-        );
-      }
-    };
-    
-    get '/private' => sub {
-      shift->render(text => "secret place");
-    };
+# log the ident user for every connection (async ident)
+under sub {
+  shift->ident(sub {
+    my $id_res = shift; # $id_res isa Mojolicious::Plugin::Ident::Response
+    if($id_res->is_success) {
+      app->log->info("ident user is " . $id_res->username);
+    } else {
+      app->log->info("unable to ident remote user");
+    }
+  });
+
+  1;
+};
+
+# get the username of the remote using ident protocol
+get '/' => sub {
+  my $self = shift;
+  my $id_res = $self->ident; # $id_res isa Mojolicious::Plugin::Ident::Response
+  $self->render(text => "hello " . $id_res->username);
+};
+
+# only allow access to the user on localhost which
+# started the mojolicious lite app with non-blocking
+# ident call (requires Mojolicious 4.28)
+under sub {
+  my($self) = @_;
+  $self->ident_same_user(sub {
+    my($same) = @_;
+    unless($same) {
+      return $self->render(
+        text   => 'permission denied',
+        status => 403,
+      );
+    }
+    $self->continue;
+  });
+  return undef;
+};
+
+get '/private' => sub {
+  shift->render(text => "secret place");
+};
+
+# only allow access to the user on localhost which 
+# started the mojolicious lite app (all versions of
+# Mojolicious)
+under sub {
+  my($self) = @_;
+  if($self->ident_same_user) {
+    return 1;
+  } else {
+    $self->render(
+      text   => 'permission denied',
+      status => 403,
+    );
+  }
+};
+
+get '/private' => sub {
+  shift->render(text => "secret place");
+};
+```
 
 # DESCRIPTION
 
@@ -86,14 +88,18 @@ Under the covers this plugin uses [AnyEvent::Ident](https://metacpan.org/pod/Any
 
 ## timeout
 
-    plugin 'ident' => { timeout => 60 };
+```perl
+plugin 'ident' => { timeout => 60 };
+```
 
 Default number of seconds to wait before timing out when contacting the remote
 ident server.  The default is 2.
 
 ## port
 
-    plugin 'ident' => { port => 113 };
+```perl
+plugin 'ident' => { port => 113 };
+```
 
 Port number to connect to.  Usually this will be 113, but you may want to change
 this for testing or some other purpose.
@@ -110,25 +116,27 @@ it will block until a response comes back or the timeout expires.
 
 With a callback (non-blocking):
 
-    get '/' => sub {
-      my $self = shift;
-      $self->ident(sub {
-        my $res = shift->res;
-        if($res->is_success)
-        {
-          $self->render(text =>
-            "username: " . $res->username .
-            "os:       " . $res->os
-          );
-        }
-        else
-        {
-          $self->render(text =>
-            "error: " . $res->error_type
-          );
-        }
-      };
-    };
+```perl
+get '/' => sub {
+  my $self = shift;
+  $self->ident(sub {
+    my $res = shift->res;
+    if($res->is_success)
+    {
+      $self->render(text =>
+        "username: " . $res->username .
+        "os:       " . $res->os
+      );
+    }
+    else
+    {
+      $self->render(text =>
+        "error: " . $res->error_type
+      );
+    }
+  };
+};
+```
 
 The callback is passed an instance of [Mojolicious::Plugin::Ident::Response](https://metacpan.org/pod/Mojolicious::Plugin::Ident::Response).  Even if
 the response is an error.  The `is_success` method on [Mojolicious::Plugin::Ident::Response](https://metacpan.org/pod/Mojolicious::Plugin::Ident::Response)
@@ -136,14 +144,16 @@ will tell you if the response is an error or not.
 
 Without a callback (blocking):
 
-    get '/' => sub {
-      my $self = shift;
-      my $ident = $self->ident;
-      $self->render(text =>
-        "username: " . $ident->username .
-        "os:       " . $ident->os
-      );
-    };
+```perl
+get '/' => sub {
+  my $self = shift;
+  my $ident = $self->ident;
+  $self->render(text =>
+    "username: " . $ident->username .
+    "os:       " . $ident->os
+  );
+};
+```
 
 Returns an instance of [Mojolicious::Plugin::Ident::Response](https://metacpan.org/pod/Mojolicious::Plugin::Ident::Response), which 
 provides two fields, username and os for the remote connection.
@@ -155,8 +165,10 @@ an exception if
 - the connection to the remote's ident server times out
 - the remote ident server returns an error
 
-    under sub { eval { shift->ident->same_user } };
-    get '/private' => 'private_route';
+```perl
+under sub { eval { shift->ident->same_user } };
+get '/private' => 'private_route';
+```
 
 The ident response class also has a same\_user method which can be used
 to determine if the user which started the Mojolicious application and
@@ -178,13 +190,15 @@ it will block until a response comes back or the timeout expires.
 
 With a callback (non-blocking):
 
-    get '/private' => sub {
-      my $self = shift;
-      $self->ident_same_user(sub {
-        my $same_user = shift;
-        $same_user ? $self->render(text => 'private text') : $self->reply->not_found;
-      });
-    }
+```perl
+get '/private' => sub {
+  my $self = shift;
+  $self->ident_same_user(sub {
+    my $same_user = shift;
+    $same_user ? $self->render(text => 'private text') : $self->reply->not_found;
+  });
+}
+```
 
 When the response comes back it will call the callback and pass in a boolean
 value indicating if the user is the same.  If the ident request connects
@@ -193,8 +207,10 @@ be called immediately, before re-entering the event loop.
 
 Without a callback (blocking):
 
-    under sub { shift->ident_same_user };
-    get '/private' => 'private_route';
+```perl
+under sub { shift->ident_same_user };
+get '/private' => 'private_route';
+```
 
 without a callback this helper will return true or false depending on
 if the user is the same.  It should never throw an exception.
@@ -227,20 +243,24 @@ Prior to that if a bridge returned false the server would generate a
 anything and thus timeout if the bridge didn't render anything.  Thus in
 older versions of [Mojolicious](https://metacpan.org/pod/Mojolicious) this:
 
-    under sub { shift->ident_same_user };
+```perl
+under sub { shift->ident_same_user };
+```
 
 would return 404 if the remote and local users are not the same.  To get the
 same behavior in both new and old versions of [Mojolicious](https://metacpan.org/pod/Mojolicious):
 
-    under sub {
-      my($self) = @_;
-      if($self->ident_same_user) {
-        return 0;
-      } else {
-        $self->reply->not_found;
-        return 1;
-      }
-    };
+```perl
+under sub {
+  my($self) = @_;
+  if($self->ident_same_user) {
+    return 0;
+  } else {
+    $self->reply->not_found;
+    return 1;
+  }
+};
+```
 
 Most of the time you should really return a 403, instead of not found (as in
 the synopsis above), but this is what you would want to do if you wanted a
