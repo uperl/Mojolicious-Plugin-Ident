@@ -1,4 +1,4 @@
-# Mojolicious::Plugin::Ident ![linux](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/linux/badge.svg) ![macos](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/macos/badge.svg) ![cygwin](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/cygwin/badge.svg)
+# Mojolicious::Plugin::Ident ![linux](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/linux/badge.svg) ![macos](https://github.com/uperl/Mojolicious-Plugin-Ident/workflows/macos/badge.svg)
 
 Mojolicious plugin to interact with a remote ident service
 
@@ -276,7 +276,7 @@ Graham Ollis <plicease@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Graham Ollis.
+This software is copyright (c) 2012-2024 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
